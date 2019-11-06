@@ -16,8 +16,13 @@ class CurrencyListViewModel(private val currencyListRepository: CurrencyListRepo
     }
     val stateStream = _stateStream
 
+    private var isRefreshLoopRunning = false
+
     fun viewCreated(){
-        startRefreshLoop()
+        if(!isRefreshLoopRunning){
+            isRefreshLoopRunning = true
+            startRefreshLoop()
+        }
     }
 
     private fun startRefreshLoop() {

@@ -86,4 +86,22 @@ class CurrencyListViewModelTest {
         viewModel.viewCreated()
         viewModel.stateStream.value shouldBe LCEState.Error(DUMMY_FAILURE_RESPONSE.errorMessage)
     }
+
+    @ExperimentalCoroutinesApi
+    @Test
+    fun `Config changes works correctly`() {
+        every {
+            runBlocking {
+                mockRepository.getLatestRates()
+            }
+        } returns DUMMY_SUCCESS_RESPONSE
+        viewModel.viewCreated()
+        viewModel.viewCreated()
+        viewModel.viewCreated()
+        testDispatcher.advanceTimeBy(3000)
+        //4 times because it is called once at the 0th second.
+        verify(exactly = 4) {
+            runBlocking { mockRepository.getLatestRates() }
+        }
+    }
 }
