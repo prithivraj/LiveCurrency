@@ -6,6 +6,7 @@ import com.zestworks.helpers.LCEState
 import com.zestworks.livecurrency.currencylist.CurrencyListRepository
 import com.zestworks.livecurrency.currencylist.CurrencyListViewModel
 import com.zestworks.livecurrency.currencylist.CurrencyListViewState
+import com.zestworks.livecurrency.currencylist.Currency
 import io.kotlintest.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -72,11 +73,14 @@ class CurrencyListViewModelTest {
             }
         } returns DUMMY_SUCCESS_RESPONSE
         viewModel.viewCreated()
-        viewModel.stateStream.value shouldBe LCEState.Content(CurrencyListViewState(DUMMY_SUCCESS_RESPONSE.data.rates))
+        viewModel.stateStream.value shouldBe LCEState.Content(
+            CurrencyListViewState(
+                DUMMY_SUCCESS_RESPONSE.data.rates.map { Currency(it.key, it.value) })
+        )
     }
 
     @Test
-    fun `A network call that fails updates the UI correctly`(){
+    fun `A network call that fails updates the UI correctly`() {
         viewModel.stateStream.value shouldBe LCEState.Loading
         every {
             runBlocking {
@@ -104,4 +108,56 @@ class CurrencyListViewModelTest {
             runBlocking { mockRepository.getLatestRates() }
         }
     }
+
+    @ExperimentalCoroutinesApi
+    @Test
+    fun `Editing an item sends it to the top of the list`() {
+        every {
+            runBlocking {
+                mockRepository.getLatestRates()
+            }
+        } returns DUMMY_SUCCESS_RESPONSE
+        viewModel.viewCreated()
+        var currentState = viewModel.stateStream.value as LCEState.Content
+        currentState.data.items[1].currencyName shouldBe "EUR"
+        viewModel.onItemEdited(1, 3.0)
+        currentState = viewModel.stateStream.value as LCEState.Content
+        currentState.data.items[0].currencyName shouldBe "EUR"
+        currentState.data.items[0].currencyValue shouldBe 3.0
+        currentState.data.items[1].currencyName shouldBe "INR"
+        currentState.data.items[1].currencyValue shouldBe 240.0
+
+        // Once when ViewModel was initiated, once after the conversion edit was performed
+        verify(exactly = 2) {
+            runBlocking { mockRepository.getLatestRates() }
+        }
+    }
+
+    @ExperimentalCoroutinesApi
+    @Test
+    fun `Subsequent updates to rates are rendered correctly`() {
+        every {
+            runBlocking {
+                mockRepository.getLatestRates()
+            }
+        } returns DUMMY_SUCCESS_RESPONSE
+        viewModel.viewCreated()
+        var currentState = viewModel.stateStream.value as LCEState.Content
+        currentState.data.items[1].currencyName shouldBe "EUR"
+        viewModel.onItemEdited(1, 3.0)
+        every {
+            runBlocking {
+                mockRepository.getLatestRates()
+            }
+        } returns DUMMY_SUCCESS_RESPONSE_RUPEE_GAINS
+
+        testDispatcher.advanceTimeBy(2000)
+        currentState = viewModel.stateStream.value as LCEState.Content
+        currentState.data.items[0].currencyName shouldBe "EUR"
+        currentState.data.items[0].currencyValue shouldBe 3.0
+        currentState.data.items[1].currencyName shouldBe "INR"
+        currentState.data.items[1].currencyValue shouldBe 255.0
+
+    }
+
 }
