@@ -46,7 +46,11 @@ class CurrencyListFragment : Fragment() {
                             layoutManager = LinearLayoutManager(context)
                         }
                         if(adapter == null){
-                            adapter = CurrencyListAdapter(it.data.items)
+                            adapter = CurrencyListAdapter(it.data.items, object: CurrencyListAdapterCallbacks{
+                                override fun onItemEdited(index: Int, newValue: Double) {
+                                    viewModel.onItemEdited(index, newValue)
+                                }
+                            })
                         } else {
                             (adapter as CurrencyListAdapter).updateData(it.data.items)
                         }

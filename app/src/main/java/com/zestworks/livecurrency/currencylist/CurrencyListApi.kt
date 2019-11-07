@@ -8,11 +8,12 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Query
 
 interface CurrencyListApi {
 
-    @GET("latest?base=EUR")
-    suspend fun getLatestRates(): Response<CurrencyListResponse>
+    @GET("latest")
+    suspend fun getLatestRates(@Query("base") base: String): Response<CurrencyListResponse>
 
     companion object {
         private const val BASE_URL = "https://revolut.duckdns.org/"
