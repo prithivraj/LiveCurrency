@@ -3,10 +3,10 @@ package com.zestworks.livecurrency
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.viewModelScope
 import com.zestworks.helpers.LCEState
+import com.zestworks.livecurrency.currencylist.Currency
 import com.zestworks.livecurrency.currencylist.CurrencyListRepository
 import com.zestworks.livecurrency.currencylist.CurrencyListViewModel
 import com.zestworks.livecurrency.currencylist.CurrencyListViewState
-import com.zestworks.livecurrency.currencylist.Currency
 import io.kotlintest.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -53,14 +53,14 @@ class CurrencyListViewModelTest {
     fun `There is one network call every second to update currencies`() {
         every {
             runBlocking {
-                mockRepository.getLatestRates()
+                mockRepository.getLatestRates("EUR")
             }
         } returns DUMMY_SUCCESS_RESPONSE
         viewModel.viewCreated()
         testDispatcher.advanceTimeBy(3000)
         //4 times because it is called once at the 0th second.
         verify(exactly = 4) {
-            runBlocking { mockRepository.getLatestRates() }
+            runBlocking { mockRepository.getLatestRates("EUR") }
         }
     }
 
@@ -69,13 +69,18 @@ class CurrencyListViewModelTest {
         viewModel.stateStream.value shouldBe LCEState.Loading
         every {
             runBlocking {
-                mockRepository.getLatestRates()
+                mockRepository.getLatestRates("EUR")
             }
         } returns DUMMY_SUCCESS_RESPONSE
         viewModel.viewCreated()
+        val responseList = DUMMY_SUCCESS_RESPONSE.data.rates.map { Currency(it.key, it.value) }
+
         viewModel.stateStream.value shouldBe LCEState.Content(
             CurrencyListViewState(
-                DUMMY_SUCCESS_RESPONSE.data.rates.map { Currency(it.key, it.value) })
+                mutableListOf<Currency>()
+                    .plus(Currency("EUR", 1.0))
+                    .plus(responseList)
+            )
         )
     }
 
@@ -84,7 +89,7 @@ class CurrencyListViewModelTest {
         viewModel.stateStream.value shouldBe LCEState.Loading
         every {
             runBlocking {
-                mockRepository.getLatestRates()
+                mockRepository.getLatestRates("EUR")
             }
         } returns DUMMY_FAILURE_RESPONSE
         viewModel.viewCreated()
@@ -96,7 +101,7 @@ class CurrencyListViewModelTest {
     fun `Config changes works correctly`() {
         every {
             runBlocking {
-                mockRepository.getLatestRates()
+                mockRepository.getLatestRates("EUR")
             }
         } returns DUMMY_SUCCESS_RESPONSE
         viewModel.viewCreated()
@@ -105,7 +110,7 @@ class CurrencyListViewModelTest {
         testDispatcher.advanceTimeBy(3000)
         //4 times because it is called once at the 0th second.
         verify(exactly = 4) {
-            runBlocking { mockRepository.getLatestRates() }
+            runBlocking { mockRepository.getLatestRates("EUR") }
         }
     }
 
@@ -114,22 +119,32 @@ class CurrencyListViewModelTest {
     fun `Editing an item sends it to the top of the list`() {
         every {
             runBlocking {
-                mockRepository.getLatestRates()
+                mockRepository.getLatestRates("EUR")
             }
         } returns DUMMY_SUCCESS_RESPONSE
+
+        every {
+            runBlocking {
+                mockRepository.getLatestRates("INR")
+            }
+        } returns DUMMY_SUCCESS_RESPONSE_INR
+
         viewModel.viewCreated()
         var currentState = viewModel.stateStream.value as LCEState.Content
-        currentState.data.items[1].currencyName shouldBe "EUR"
-        viewModel.onItemEdited(1, 3.0)
-        currentState = viewModel.stateStream.value as LCEState.Content
         currentState.data.items[0].currencyName shouldBe "EUR"
-        currentState.data.items[0].currencyValue shouldBe 3.0
-        currentState.data.items[1].currencyName shouldBe "INR"
-        currentState.data.items[1].currencyValue shouldBe 240.0
+        viewModel.onItemEdited(1, 160.0)
+        currentState = viewModel.stateStream.value as LCEState.Content
+        currentState.data.items[0].currencyName shouldBe "INR"
+        currentState.data.items[0].currencyValue shouldBe 160.0
+        currentState.data.items[1].currencyName shouldBe "EUR"
+        currentState.data.items[1].currencyValue shouldBe 2.0
 
         // Once when ViewModel was initiated, once after the conversion edit was performed
-        verify(exactly = 2) {
-            runBlocking { mockRepository.getLatestRates() }
+        verify(exactly = 1) {
+            runBlocking { mockRepository.getLatestRates("EUR") }
+        }
+        verify(exactly = 1) {
+            runBlocking { mockRepository.getLatestRates("INR") }
         }
     }
 
@@ -138,16 +153,16 @@ class CurrencyListViewModelTest {
     fun `Subsequent updates to rates are rendered correctly`() {
         every {
             runBlocking {
-                mockRepository.getLatestRates()
+                mockRepository.getLatestRates("EUR")
             }
         } returns DUMMY_SUCCESS_RESPONSE
         viewModel.viewCreated()
         var currentState = viewModel.stateStream.value as LCEState.Content
-        currentState.data.items[1].currencyName shouldBe "EUR"
-        viewModel.onItemEdited(1, 3.0)
+        currentState.data.items[0].currencyName shouldBe "EUR"
+        viewModel.onItemEdited(0, 3.0)
         every {
             runBlocking {
-                mockRepository.getLatestRates()
+                mockRepository.getLatestRates("EUR")
             }
         } returns DUMMY_SUCCESS_RESPONSE_RUPEE_GAINS
 
@@ -157,7 +172,5 @@ class CurrencyListViewModelTest {
         currentState.data.items[0].currencyValue shouldBe 3.0
         currentState.data.items[1].currencyName shouldBe "INR"
         currentState.data.items[1].currencyValue shouldBe 255.0
-
     }
-
 }

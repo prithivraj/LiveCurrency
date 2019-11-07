@@ -8,8 +8,19 @@ val DUMMY_SUCCESS_RESPONSE = NetworkResult.Success(
         base = "EUR",
         date = "17-11-1991",
         rates = hashMapOf(
-            "EUR" to 1.0,
-            "INR" to 80.0
+            "INR" to 80.0,
+            "THB" to 160.0
+        )
+    )
+)
+
+val DUMMY_SUCCESS_RESPONSE_INR = NetworkResult.Success(
+    CurrencyListResponse(
+        base = "INR",
+        date = "17-11-1991",
+        rates = hashMapOf(
+            "EUR" to 0.0125,
+            "THB" to 0.0250
         )
     )
 )
@@ -19,8 +30,8 @@ val DUMMY_SUCCESS_RESPONSE_RUPEE_GAINS = NetworkResult.Success(
         base = "EUR",
         date = "17-11-1991",
         rates = hashMapOf(
-            "EUR" to 1.0,
-            "INR" to 85.0
+            "INR" to 85.0,
+            "THB" to 160.0
         )
     )
 )
