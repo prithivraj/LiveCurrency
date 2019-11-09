@@ -3,9 +3,9 @@ package com.zestworks.livecurrency.currencylist
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zestworks.helpers.LCEState
-import com.zestworks.helpers.LCEState.Content
-import com.zestworks.helpers.LCEState.Loading
+import com.zestworks.helpers.LCE
+import com.zestworks.helpers.LCE.Content
+import com.zestworks.helpers.LCE.Loading
 import com.zestworks.helpers.NetworkResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 class CurrencyListViewModel(private val currencyListRepository: CurrencyListRepository) :
     ViewModel() {
 
-    private val _stateStream = MutableLiveData<LCEState<CurrencyListViewState>>().apply {
+    private val _stateStream = MutableLiveData<LCE<CurrencyListViewState>>().apply {
         postValue(Loading)
     }
     val stateStream = _stateStream
@@ -110,7 +110,7 @@ class CurrencyListViewModel(private val currencyListRepository: CurrencyListRepo
                         }
                     }
                     is NetworkResult.Error -> {
-                        _stateStream.postValue(LCEState.Error(latestRates.errorMessage))
+                        _stateStream.postValue(LCE.Error(latestRates.errorMessage))
                     }
                 }
                 delay(1000)

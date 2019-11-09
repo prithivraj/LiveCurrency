@@ -1,7 +1,6 @@
 package com.zestworks.livecurrency.currencylist
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,8 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.zestworks.helpers.LCEState
-import com.zestworks.helpers.LCEState.*
+import com.zestworks.helpers.LCE.*
 import com.zestworks.livecurrency.R
 import kotlinx.android.synthetic.main.currency_list_fragment.*
 

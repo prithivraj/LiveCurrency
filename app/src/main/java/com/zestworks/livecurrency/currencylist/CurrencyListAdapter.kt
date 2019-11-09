@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.zestworks.helpers.getTextAsDouble
 import com.zestworks.livecurrency.R
 
 class CurrencyListAdapter(
@@ -25,23 +26,24 @@ class CurrencyListAdapter(
     override fun getItemCount(): Int = items.count()
 
     override fun onBindViewHolder(holder: CurrencyListViewHolder, position: Int) {
-        holder.currencyName.text = items[position].currencyName
+        val currentRowData = items[position]
+        holder.currencyName.text = currentRowData.currencyName
         holder.currencyValue.apply {
             removeTextChangedListener(holder.textWatcher)
-            //Because settext moves the cursor to the end.
-            editableText.replace(0, editableText.length, items[position].currencyValue.toString())
+            if (getTextAsDouble() != currentRowData.currencyValue) {
+                editableText.replace(0, editableText.length, currentRowData.currencyValue.toString())
+            }
+
             setOnFocusChangeListener { _, hasFocus ->
-                if(hasFocus){
-                    currencyListAdapterCallbacks.onItemEdited(holder.adapterPosition, items[holder.adapterPosition].currencyValue)
+                if (hasFocus) {
+                    currencyListAdapterCallbacks.onItemEdited(
+                        holder.adapterPosition,
+                        items[holder.adapterPosition].currencyValue
+                    )
                 }
             }
             val watcher = doAfterTextChanged {
-                val value = if(it.toString().isEmpty()){
-                    0.0
-                } else {
-                    it.toString().toDouble()
-                }
-                currencyListAdapterCallbacks.onItemEdited(holder.adapterPosition, value)
+                currencyListAdapterCallbacks.onItemEdited(holder.adapterPosition, getTextAsDouble())
             }
             holder.textWatcher = watcher
         }

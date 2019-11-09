@@ -2,7 +2,7 @@ package com.zestworks.livecurrency
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.viewModelScope
-import com.zestworks.helpers.LCEState
+import com.zestworks.helpers.LCE
 import com.zestworks.livecurrency.currencylist.Currency
 import com.zestworks.livecurrency.currencylist.CurrencyListRepository
 import com.zestworks.livecurrency.currencylist.CurrencyListViewModel
@@ -66,7 +66,7 @@ class CurrencyListViewModelTest {
 
     @Test
     fun `A successful network call updates UI correctly`() {
-        viewModel.stateStream.value shouldBe LCEState.Loading
+        viewModel.stateStream.value shouldBe LCE.Loading
         every {
             runBlocking {
                 mockRepository.getLatestRates("EUR")
@@ -75,7 +75,7 @@ class CurrencyListViewModelTest {
         viewModel.viewCreated()
         val responseList = DUMMY_SUCCESS_RESPONSE.data.rates.map { Currency(it.key, it.value) }
 
-        viewModel.stateStream.value shouldBe LCEState.Content(
+        viewModel.stateStream.value shouldBe LCE.Content(
             CurrencyListViewState(
                 mutableListOf<Currency>()
                     .plus(Currency("EUR", 1.0))
@@ -86,14 +86,14 @@ class CurrencyListViewModelTest {
 
     @Test
     fun `A network call that fails updates the UI correctly`() {
-        viewModel.stateStream.value shouldBe LCEState.Loading
+        viewModel.stateStream.value shouldBe LCE.Loading
         every {
             runBlocking {
                 mockRepository.getLatestRates("EUR")
             }
         } returns DUMMY_FAILURE_RESPONSE
         viewModel.viewCreated()
-        viewModel.stateStream.value shouldBe LCEState.Error(DUMMY_FAILURE_RESPONSE.errorMessage)
+        viewModel.stateStream.value shouldBe LCE.Error(DUMMY_FAILURE_RESPONSE.errorMessage)
     }
 
     @ExperimentalCoroutinesApi
@@ -130,10 +130,10 @@ class CurrencyListViewModelTest {
         } returns DUMMY_SUCCESS_RESPONSE_INR
 
         viewModel.viewCreated()
-        var currentState = viewModel.stateStream.value as LCEState.Content
+        var currentState = viewModel.stateStream.value as LCE.Content
         currentState.data.items[0].currencyName shouldBe "EUR"
         viewModel.onItemEdited(1, 160.0)
-        currentState = viewModel.stateStream.value as LCEState.Content
+        currentState = viewModel.stateStream.value as LCE.Content
         currentState.data.items[0].currencyName shouldBe "INR"
         currentState.data.items[0].currencyValue shouldBe 160.0
         currentState.data.items[1].currencyName shouldBe "EUR"
@@ -157,7 +157,7 @@ class CurrencyListViewModelTest {
             }
         } returns DUMMY_SUCCESS_RESPONSE
         viewModel.viewCreated()
-        var currentState = viewModel.stateStream.value as LCEState.Content
+        var currentState = viewModel.stateStream.value as LCE.Content
         currentState.data.items[0].currencyName shouldBe "EUR"
         viewModel.onItemEdited(0, 3.0)
         every {
@@ -167,7 +167,7 @@ class CurrencyListViewModelTest {
         } returns DUMMY_SUCCESS_RESPONSE_RUPEE_GAINS
 
         testDispatcher.advanceTimeBy(2000)
-        currentState = viewModel.stateStream.value as LCEState.Content
+        currentState = viewModel.stateStream.value as LCE.Content
         currentState.data.items[0].currencyName shouldBe "EUR"
         currentState.data.items[0].currencyValue shouldBe 3.0
         currentState.data.items[1].currencyName shouldBe "INR"
