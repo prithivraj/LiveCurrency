@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.zestworks.helpers.LCE.*
 import com.zestworks.livecurrency.R
 import kotlinx.android.synthetic.main.currency_list_fragment.*
@@ -52,6 +53,7 @@ class CurrencyListFragment : Fragment() {
                         } else {
                             (adapter as CurrencyListAdapter).updateData(it.data.items)
                         }
+                        (itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
                     }
                 }
                 is Error -> {

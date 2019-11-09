@@ -8,12 +8,11 @@
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/currency_image"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_margin="16dp"
-        android:background="@color/colorAccent"
         tools:src="@tools:sample/avatars" />
 
     <TextView

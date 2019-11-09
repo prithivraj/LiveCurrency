@@ -5,10 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.zestworks.helpers.countryFlagImages
 import com.zestworks.helpers.getTextAsDouble
 import com.zestworks.livecurrency.R
 
@@ -45,6 +48,11 @@ class CurrencyListAdapter(
             val watcher = doAfterTextChanged {
                 currencyListAdapterCallbacks.onItemEdited(holder.adapterPosition, getTextAsDouble())
             }
+            Glide
+                .with(context)
+                .load(countryFlagImages[currentRowData.currencyName])
+                .fitCenter()
+                .into(holder.currencyImage)
             holder.textWatcher = watcher
         }
     }
@@ -59,6 +67,7 @@ class CurrencyListAdapter(
 }
 
 class CurrencyListViewHolder(row: View) : RecyclerView.ViewHolder(row) {
+    val currencyImage: ImageView = row.findViewById(R.id.currency_image)
     val currencyName: TextView = row.findViewById(R.id.currency_name)
     val currencyValue: EditText = row.findViewById(R.id.currency_value)
     var textWatcher: TextWatcher? = null
