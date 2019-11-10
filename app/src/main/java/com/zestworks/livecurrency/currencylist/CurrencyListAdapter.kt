@@ -37,7 +37,7 @@ class CurrencyListAdapter(
                 editableText.replace(
                     0,
                     editableText.length,
-                    currentRowData.currencyValue.toString()
+                    String.format("%.3f", currentRowData.currencyValue)
                 )
             }
 

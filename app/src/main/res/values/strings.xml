@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">LiveCurrency</string>
+    <string name="default_value">0.0</string>
 </resources>
