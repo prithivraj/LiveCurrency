@@ -9,7 +9,9 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
-import com.zestworks.helpers.LCE.*
+import com.zestworks.helpers.LCE.Content
+import com.zestworks.helpers.LCE.Error
+import com.zestworks.helpers.LCE.Loading
 import com.zestworks.livecurrency.R
 import kotlinx.android.synthetic.main.currency_list_fragment.*
 
@@ -48,6 +50,10 @@ class CurrencyListFragment : Fragment() {
                             adapter = CurrencyListAdapter(it.data.items, object: CurrencyListAdapterCallbacks{
                                 override fun onItemEdited(index: Int, newValue: Double) {
                                     viewModel.onItemEdited(index, newValue)
+                                }
+
+                                override fun onItemFocused(index: Int) {
+                                    viewModel.onItemFocused(index)
                                 }
                             })
                         } else {

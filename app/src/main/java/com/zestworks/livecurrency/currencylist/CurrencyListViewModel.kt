@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 class CurrencyListViewModel(private val currencyListRepository: CurrencyListRepository) :
     ViewModel() {
 
+    //Single source of truth for the UI.
     private val _stateStream = MutableLiveData<LCE<CurrencyListViewState>>().apply {
         postValue(Loading)
     }
@@ -21,7 +22,9 @@ class CurrencyListViewModel(private val currencyListRepository: CurrencyListRepo
 
     private var isRefreshLoopRunning = false
     private lateinit var refreshLoopJob: Job
+
     private var baseCurrency = Currency("EUR", 1.0)
+    private var rates = hashMapOf<String, Double>()
 
     fun viewCreated() {
         if (!isRefreshLoopRunning) {
@@ -36,25 +39,21 @@ class CurrencyListViewModel(private val currencyListRepository: CurrencyListRepo
             if (value is Content) {
                 refreshLoopJob.cancel() // Prevent jumping cursors
                 val currentStateCopy = value.data.items.toMutableList()
-                val editedCurrency = currentStateCopy[index]
-                baseCurrency = editedCurrency.copy(
-                    currencyValue = newValue
-                )
-                val multiplier = newValue.div(editedCurrency.currencyValue)
+                val multiplier = newValue.div(value.data.items.first().currencyValue)
                 currentStateCopy.removeAt(index)
-                val map = currentStateCopy.map {
+                val newState = currentStateCopy.map {
                     Currency(
                         it.currencyName,
-                        it.currencyValue.times(multiplier)
+                        rates[it.currencyName]!!.times(multiplier)
                     )
                 }
-                val newState = mutableListOf<Currency>()
-                    .plus(baseCurrency)
-                    .plus(map)
+                val newBase = baseCurrency.copy(
+                    currencyValue = newValue
+                )
                 _stateStream.postValue(
                     Content(
                         CurrencyListViewState(
-                            newState
+                            mutableListOf<Currency>().plus(newBase).plus(newState)
                         )
                     )
                 )
@@ -63,24 +62,53 @@ class CurrencyListViewModel(private val currencyListRepository: CurrencyListRepo
         }
     }
 
+    fun onItemFocused(index: Int) {
+        viewModelScope.launch {
+            val value = _stateStream.value
+            if (value is Content) {
+                refreshLoopJob.cancel() // Prevent jumping cursors
+                val mutableCurrentState = value.data.items.toMutableList()
+                val editedCurrency = mutableCurrentState[index]
+                rates[baseCurrency.currencyName] = baseCurrency.currencyValue
+                rates.remove(editedCurrency.currencyName)
+                baseCurrency = editedCurrency.copy(
+                    currencyName = editedCurrency.currencyName,
+                    currencyValue = editedCurrency.currencyValue
+                )
+                mutableCurrentState.removeAt(index)
+                mutableCurrentState.add(0, baseCurrency)
+                _stateStream.postValue(value.copy(data = CurrencyListViewState(mutableCurrentState)))
+                refreshLoopJob = startRefreshLoop()
+            }
+        }
+    }
+
     private fun startRefreshLoop(): Job {
         return viewModelScope.launch {
             while (true) {
+                delay(1000)
                 when (val latestRates =
                     currencyListRepository.getLatestRates(baseCurrency.currencyName)) {
                     is NetworkResult.Success -> {
                         //Refreshing existing values
                         val currentState = _stateStream.value
                         if (currentState is Content) {
+                            val baseCurrencyUserValue =
+                                currentState.data.items.first().currencyValue
+                            val newConversionMap = HashMap(latestRates.data.rates)
+                            newConversionMap.entries.forEach {
+                                it.setValue(it.value.times(baseCurrencyUserValue))
+                            }
+                            rates = newConversionMap
                             val newState = mutableListOf<Currency>()
                                 .plus(
                                     currentState.data.items.map {
-                                        if(baseCurrency.currencyName == it.currencyName){
-                                            baseCurrency
+                                        if (it == currentState.data.items.first()) {
+                                            currentState.data.items.first()
                                         } else {
                                             Currency(
                                                 it.currencyName,
-                                                latestRates.data.rates[it.currencyName]!!.times(baseCurrency.currencyValue)
+                                                rates[it.currencyName]!!
                                             )
                                         }
                                     }
@@ -95,6 +123,7 @@ class CurrencyListViewModel(private val currencyListRepository: CurrencyListRepo
                             )
                         } else {
                             //Loading for the first time
+                            rates = HashMap(latestRates.data.rates)
                             val newState = mutableListOf<Currency>()
                                 .plus(baseCurrency)
                                 .plus(latestRates.data.rates.map {
@@ -113,7 +142,6 @@ class CurrencyListViewModel(private val currencyListRepository: CurrencyListRepo
                         _stateStream.postValue(LCE.Error(latestRates.errorMessage))
                     }
                 }
-                delay(1000)
             }
         }
     }

@@ -33,11 +33,13 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:ems="12"
+        android:hint="@string/default_value"
         android:inputType="numberDecimal"
-        android:textAlignment="center"
+        android:importantForAutofill="no"
         app:layout_constraintBottom_toBottomOf="@+id/currency_image"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/currency_image"
+        android:textAlignment="textEnd"
         tools:text="1.0" />
 
 

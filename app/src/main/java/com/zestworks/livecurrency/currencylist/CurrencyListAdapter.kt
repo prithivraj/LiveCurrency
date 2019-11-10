@@ -34,14 +34,17 @@ class CurrencyListAdapter(
         holder.currencyValue.apply {
             removeTextChangedListener(holder.textWatcher)
             if (getTextAsDouble() != currentRowData.currencyValue) {
-                editableText.replace(0, editableText.length, currentRowData.currencyValue.toString())
+                editableText.replace(
+                    0,
+                    editableText.length,
+                    currentRowData.currencyValue.toString()
+                )
             }
 
             setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
-                    currencyListAdapterCallbacks.onItemEdited(
-                        holder.adapterPosition,
-                        items[holder.adapterPosition].currencyValue
+                    currencyListAdapterCallbacks.onItemFocused(
+                        holder.adapterPosition
                     )
                 }
             }
@@ -75,4 +78,5 @@ class CurrencyListViewHolder(row: View) : RecyclerView.ViewHolder(row) {
 
 interface CurrencyListAdapterCallbacks {
     fun onItemEdited(index: Int, newValue: Double)
+    fun onItemFocused(index: Int)
 }
