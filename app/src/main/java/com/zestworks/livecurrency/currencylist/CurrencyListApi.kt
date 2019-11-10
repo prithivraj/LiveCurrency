@@ -27,15 +27,14 @@ interface CurrencyListApi {
                 .create(CurrencyListApi::class.java)
         }
 
-        private val okHttpClient: OkHttpClient by lazy {
-            val logger = HttpLoggingInterceptor(HttpLoggingInterceptor.Logger {
-                Log.d("CurrencyListApi", it)
-            })
-            logger.level = HttpLoggingInterceptor.Level.BASIC
-
-            OkHttpClient.Builder()
-                .addInterceptor(logger)
-                .build()
+        private val logger = HttpLoggingInterceptor(HttpLoggingInterceptor.Logger {
+            Log.d("CurrencyListApi", it)
+        }).apply {
+            level = HttpLoggingInterceptor.Level.BASIC
         }
+
+        val okHttpClient: OkHttpClient = OkHttpClient.Builder()
+            .addInterceptor(logger)
+            .build()
     }
 }
