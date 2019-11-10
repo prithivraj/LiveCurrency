@@ -12,3 +12,15 @@ fun EditText.getTextAsDouble(): Double = if (text.isBlank()) {
     }
     double
 }
+
+fun EditText.setNonZeroDoubleOrEmpty(value: Double) {
+    if (value == 0.0) {
+        setText("")
+    } else {
+        editableText.replace(
+            0,
+            editableText.length,
+            String.format("%.3f", value)
+        )
+    }
+}

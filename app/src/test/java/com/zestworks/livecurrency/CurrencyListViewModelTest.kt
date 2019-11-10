@@ -190,4 +190,29 @@ class CurrencyListViewModelTest {
         currentState.data.items[1].currencyName shouldBe "INR"
         currentState.data.items[1].currencyValue shouldBe 255.0
     }
+
+    @ExperimentalCoroutinesApi
+    @Test
+    fun `Values are computed correctly after a 0 input`() {
+        every {
+            runBlocking {
+                mockRepository.getLatestRates("EUR")
+            }
+        } returns DUMMY_SUCCESS_RESPONSE
+        viewModel.viewCreated()
+        testDispatcher.advanceTimeBy(1000)
+
+        viewModel.onItemEdited(0, 0.0)
+        var currentState = viewModel.stateStream.value as Content
+        currentState.data.items[0].currencyName shouldBe "EUR"
+        currentState.data.items[0].currencyValue shouldBe 0.0
+        currentState.data.items.forEach { it.currencyValue shouldBe 0.0 }
+
+        viewModel.onItemEdited(0, 5.0)
+        currentState = viewModel.stateStream.value as Content
+        currentState.data.items[0].currencyName shouldBe "EUR"
+        currentState.data.items[0].currencyValue shouldBe 5.0
+        currentState.data.items[1].currencyName shouldBe "INR"
+        currentState.data.items[1].currencyValue shouldBe 400.0
+    }
 }

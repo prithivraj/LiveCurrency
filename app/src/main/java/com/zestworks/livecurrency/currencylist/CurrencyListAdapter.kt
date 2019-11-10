@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.zestworks.helpers.countryFlagImages
 import com.zestworks.helpers.getTextAsDouble
+import com.zestworks.helpers.setNonZeroDoubleOrEmpty
 import com.zestworks.livecurrency.R
 
 class CurrencyListAdapter(
@@ -34,11 +35,7 @@ class CurrencyListAdapter(
         holder.currencyValue.apply {
             removeTextChangedListener(holder.textWatcher)
             if (getTextAsDouble() != currentRowData.currencyValue) {
-                editableText.replace(
-                    0,
-                    editableText.length,
-                    String.format("%.3f", currentRowData.currencyValue)
-                )
+                setNonZeroDoubleOrEmpty(currentRowData.currencyValue)
             }
 
             setOnFocusChangeListener { _, hasFocus ->
